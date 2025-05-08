@@ -172,13 +172,6 @@ class vLLMRollout(BaseRollout):
             else:
                 kwargs['stop'] = self.config.stop
 
-        if self.config.stop and len(self.config.stop) > 0:
-            kwargs['detokenize'] = True
-            if not isinstance(self.config.stop, list):
-                kwargs['stop'] = [self.config.stop] if isinstance(self.config.stop, str) else list(self.config.stop)
-            else:
-                kwargs['stop'] = self.config.stop
-
         # supporting adding any sampling params from the config file
         for k in config.keys():
             if hasattr(SamplingParams(), str(k)):
