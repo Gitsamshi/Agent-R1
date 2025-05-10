@@ -266,6 +266,7 @@ class ToolGenerationManager:
         turns = torch.zeros(batch_size, dtype=torch.int32)
         active_num_list = [active_mask.sum().item()]
         rollings = gen_batch
+        meta_info = gen_batch.meta_info
         prompts = gen_batch.batch['input_ids'][:, -self.config.max_prompt_length:].clone()
 
         # Main generation loop
@@ -302,13 +303,15 @@ class ToolGenerationManager:
                     },
                     non_tensors={
                         k: v[active_mask.numpy()] for k, v in rollings.non_tensor_batch.items()
-                    }
+                    },
+                    meta_info=meta_info
                 )
             else:
                 rollings_active = DataProto.from_dict(
                     tensors={
                         k: v[active_mask] for k, v in rollings.batch.items()
                     },
+                    meta_info=meta_info
                 )
 
             rollings_active, pad_size = pad_dataproto_to_divisor(rollings_active, self.actor_rollout_wg.world_size)
