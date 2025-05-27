@@ -196,17 +196,6 @@ def compute_advantage(data: DataProto, adv_estimator, gamma=1.0, lam=1.0, num_re
         data.batch["response_mask"] = compute_response_mask(data)
     # prepare response group
     # TODO: add other ways to estimate advantages
-    responses = data.batch["responses"]
-    response_length = responses.size(-1)
-    attention_mask = data.batch["attention_mask"]
-    response_mask = attention_mask[:, -response_length:]
-    
-    # Check if action_mask exists, otherwise use response_mask
-    if "action_mask" in data.batch:
-        action_mask = data.batch["action_mask"]
-    else:
-        action_mask = response_mask  # Fallback to response_mask if action_mask not available
-        
     
     if adv_estimator == AdvantageEstimator.GAE:
         advantages, returns = core_algos.compute_gae_advantage_return(
@@ -221,7 +210,7 @@ def compute_advantage(data: DataProto, adv_estimator, gamma=1.0, lam=1.0, num_re
     elif adv_estimator == AdvantageEstimator.GRPO:
         advantages, returns = core_algos.compute_grpo_outcome_advantage(
             token_level_rewards=data.batch["token_level_rewards"],
-            action_mask=action_mask,
+            action_mask=data.batch["action_mask"],
             index=data.non_tensor_batch["uid"],
             norm_adv_by_std_in_grpo=norm_adv_by_std_in_grpo,
         )
@@ -230,7 +219,7 @@ def compute_advantage(data: DataProto, adv_estimator, gamma=1.0, lam=1.0, num_re
     elif adv_estimator == AdvantageEstimator.REINFORCE_PLUS_PLUS_BASELINE:
         advantages, returns = core_algos.compute_reinforce_plus_plus_baseline_outcome_advantage(
             token_level_rewards=data.batch["token_level_rewards"],
-            action_mask=data.batch["response_mask"],
+            action_mask=data.batch["action_mask"],
             index=data.non_tensor_batch["uid"],
         )
         data.batch["advantages"] = advantages
@@ -249,7 +238,6 @@ def compute_advantage(data: DataProto, adv_estimator, gamma=1.0, lam=1.0, num_re
             reward_baselines=data.batch["reward_baselines"],
             action_mask=data.batch["action_mask"],
         )
-
         data.batch["advantages"] = advantages
         data.batch["returns"] = returns
     elif adv_estimator == AdvantageEstimator.RLOO:
@@ -1093,9 +1081,9 @@ class RayAgentTrainer(object):
                     with _timer("old_log_prob", timing_raw):
                         old_log_prob = self.actor_rollout_wg.compute_log_prob(batch)
                         entropys = old_log_prob.batch["entropys"]
-                        response_masks = batch.batch["response_mask"]
+                        action_masks = batch.batch["action_mask"]
                         loss_agg_mode = self.config.actor_rollout_ref.actor.loss_agg_mode
-                        entropy_loss = agg_loss(loss_mat=entropys, loss_mask=response_masks, loss_agg_mode=loss_agg_mode)
+                        entropy_loss = agg_loss(loss_mat=entropys, loss_mask=action_masks, loss_agg_mode=loss_agg_mode)
                         old_log_prob_metrics = {"actor/entropy_loss": entropy_loss.detach().item()}
                         metrics.update(old_log_prob_metrics)
                         old_log_prob.batch.pop("entropys")

@@ -234,7 +234,7 @@ def compute_reinforce_plus_plus_baseline_outcome_advantage(token_level_rewards: 
     Args:
         token_level_rewards: `(torch.Tensor)`
             shape: (bs, response_length)
-        response_mask: `(torch.Tensor)`
+        action_mask: `(torch.Tensor)`
             shape: (bs, response_length)
 
     Returns:
@@ -244,7 +244,8 @@ def compute_reinforce_plus_plus_baseline_outcome_advantage(token_level_rewards: 
             shape: (bs, response_length)
     """
     response_length = token_level_rewards.shape[-1]
-    scores = token_level_rewards.sum(dim=-1)
+    # Sum rewards only for action tokens
+    scores = (token_level_rewards * action_mask).sum(dim=-1)
 
     id2score = defaultdict(list)
     id2mean = {}
