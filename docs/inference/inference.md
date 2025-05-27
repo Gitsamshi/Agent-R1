@@ -19,7 +19,9 @@ Use the model merge script to convert your checkpoints:
 cp scripts/model_merge.sh ./
 
 # Modify the script to use your checkpoint directory
-# Edit the script and replace <your_checkpoint_dir> with your actual checkpoint path
+# Edit the script and replace <your_checkpoint_dir> with your actual checkpoint path, e.g. ./checkpoints/<your_project_name>/<your_experiment_name>/global_step_<your_global_step>/actor
+# Edit the script and replace <your_hf_model_path> with your actual HF model path, e.g. Qwen/Qwen2.5-3B-Instruct
+# Edit the script and replace <your_target_dir> with your actual target directory
 
 # Run the conversion
 bash model_merge.sh
