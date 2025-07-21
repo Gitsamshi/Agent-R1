@@ -283,7 +283,7 @@ class ToolGenerationManager:
                 active_mask[length_exceeded] = 0
 
             raw_prompt_ids = rollings.non_tensor_batch['raw_prompt_ids']
-            length_exceeded = [len(prompt_id) > self.config.max_response_length for prompt_id in raw_prompt_ids]
+            length_exceeded = [len(prompt_id) > self.config.max_prompt_length for prompt_id in raw_prompt_ids]
             if any(length_exceeded):
                 print("[WARNING] SEQUENCE LENGTH EXCEEDED MAX PROMPT LENGTH")
                 for prompt_id, length_exceeded_ in zip(raw_prompt_ids, length_exceeded):
